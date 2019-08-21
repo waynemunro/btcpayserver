@@ -37,87 +37,17 @@ namespace BTCPayServer.Models
         }
     }
 
-    public class InvoiceCryptoInfo
-    {
-        [JsonProperty("cryptoCode")]
-        public string CryptoCode { get; set; }
-
-        [JsonProperty("rate")]
-        public decimal Rate { get; set; }
-
-        //"exRates":{"USD":4320.02}
-        [JsonProperty("exRates")]
-        public Dictionary<string, double> ExRates
-        {
-            get; set;
-        }
-
-        //"btcPaid":"0.000000"
-        [JsonProperty("paid")]
-        public string Paid
-        {
-            get; set;
-        }
-
-        //"btcPrice":"0.001157"
-        [JsonProperty("price")]
-        public string Price
-        {
-            get; set;
-        }
-
-        //"btcDue":"0.001160"
-        /// <summary>
-        /// Amount of crypto remaining to pay this invoice
-        /// </summary>
-        [JsonProperty("due")]
-        public string Due
-        {
-            get; set;
-        }
-
-        [JsonProperty("paymentUrls")]
-        public NBitpayClient.InvoicePaymentUrls PaymentUrls
-        {
-            get; set;
-        }
-
-        [JsonProperty("address")]
-        public string Address { get; set; }
-        [JsonProperty("url")]
-        public string Url { get; set; }
-
-        /// <summary>
-        /// Total amount of this invoice
-        /// </summary>
-        [JsonProperty("totalDue")]
-        public string TotalDue { get; set; }
-
-        /// <summary>
-        /// Total amount of network fee to pay to the invoice
-        /// </summary>
-        [JsonProperty("networkFee")]
-        public string NetworkFee { get; set; }
-
-        /// <summary>
-        /// Number of transactions required to pay
-        /// </summary>
-        [JsonProperty("txCount")]
-        public int TxCount { get; set; }
-
-        /// <summary>
-        /// Total amount of the invoice paid in this crypto
-        /// </summary>
-        [JsonProperty("cryptoPaid")]
-        public Money CryptoPaid { get; set; }
-    }
-
     //{"facade":"pos/invoice","data":{,}}
     public class InvoiceResponse
     {
+        [JsonIgnore]
+        public string StoreId
+        {
+            get; set;
+        }
+        
         //"url":"https://test.bitpay.com/invoice?id=9saCHtp1zyPcNoi3rDdBu8"
         [JsonProperty("url")]
-        [Obsolete("Use CryptoInfo.Url instead")]
         public string Url
         {
             get; set;
@@ -151,11 +81,17 @@ namespace BTCPayServer.Models
         }
 
         [JsonProperty("cryptoInfo")]
-        public List<InvoiceCryptoInfo> CryptoInfo { get; set; }
+        public List<NBitpayClient.InvoiceCryptoInfo> CryptoInfo { get; set; }
 
         //"price":5
         [JsonProperty("price")]
-        public double Price
+        public decimal Price
+        {
+            get; set;
+        }
+
+        [JsonProperty("taxIncluded", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal TaxIncluded
         {
             get; set;
         }
@@ -170,7 +106,7 @@ namespace BTCPayServer.Models
         //"exRates":{"USD":4320.02}
         [JsonProperty("exRates")]
         [Obsolete("Use CryptoInfo.ExRates instead")]
-        public Dictionary<string, double> ExRates
+        public Dictionary<string, decimal> ExRates
         {
             get; set;
         }
@@ -185,6 +121,12 @@ namespace BTCPayServer.Models
         //"itemDesc":"Some description"
         [JsonProperty("itemDesc")]
         public string ItemDesc
+        {
+            get; set;
+        }       
+        
+        [JsonProperty("itemCode")]
+        public string ItemCode
         {
             get; set;
         }
@@ -300,6 +242,31 @@ namespace BTCPayServer.Models
         {
             get; set;
         }
+
+        [JsonProperty("paymentSubtotals")]
+        public Dictionary<string, long> PaymentSubtotals { get; set; }
+
+        [JsonProperty("paymentTotals")]
+        public Dictionary<string, long> PaymentTotals { get; set; }
+
+        [JsonProperty("amountPaid", DefaultValueHandling = DefaultValueHandling.Include)]
+        public long AmountPaid { get; set; }
+
+        [JsonProperty("minerFees")]
+        public Dictionary<string, NBitpayClient.MinerFeeInfo> MinerFees { get; set; }
+
+        [JsonProperty("exchangeRates")]
+        public Dictionary<string, Dictionary<string, decimal>> ExchangeRates { get; set; }
+
+        [JsonProperty("supportedTransactionCurrencies")]
+        public Dictionary<string, NBitpayClient.InvoiceSupportedTransactionCurrency> SupportedTransactionCurrencies { get; set; }
+
+        [JsonProperty("addresses")]
+        public Dictionary<string, string> Addresses { get; set; }
+        [JsonProperty("paymentCodes")]
+        public Dictionary<string, NBitpayClient.InvoicePaymentUrls> PaymentCodes { get; set; }
+        [JsonProperty("buyer")]
+        public JObject Buyer { get; set; }
     }
     public class Flags
     {
@@ -309,4 +276,5 @@ namespace BTCPayServer.Models
             get; set;
         }
     }
+
 }

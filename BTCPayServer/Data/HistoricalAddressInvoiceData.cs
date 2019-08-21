@@ -12,6 +12,16 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public InvoiceData InvoiceData
+        {
+            get; set;
+        }
+
+        /// <summary>
+        /// Some crypto currencies share same address prefix
+        /// For not having exceptions thrown by two address on different network, we suffix by "#CRYPTOCODE" 
+        /// </summary>
+        [Obsolete("Use GetCryptoCode instead")]
         public string Address
         {
             get; set;
@@ -22,9 +32,25 @@ namespace BTCPayServer.Data
         public string CryptoCode { get; set; }
 
 #pragma warning disable CS0618
-        public string GetCryptoCode()
+        public Payments.PaymentMethodId GetPaymentMethodId()
         {
-            return string.IsNullOrEmpty(CryptoCode) ? "BTC" : CryptoCode;
+            return string.IsNullOrEmpty(CryptoCode) ? new Payments.PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike)
+                                                    : Payments.PaymentMethodId.Parse(CryptoCode);
+        }
+        public string GetAddress()
+        {
+            if (Address == null)
+                return null;
+            var index = Address.IndexOf("#", StringComparison.InvariantCulture);
+            if (index == -1)
+                return Address;
+            return Address.Substring(0, index);
+        }
+        public HistoricalAddressInvoiceData SetAddress(string depositAddress, string cryptoCode)
+        {
+            Address = depositAddress + "#" + cryptoCode;
+            CryptoCode = cryptoCode;
+            return this;
         }
 #pragma warning restore CS0618
 

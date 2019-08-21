@@ -2,55 +2,43 @@
 @inject UserManager<ApplicationUser> UserManager
 @inject RoleManager<IdentityRole> RoleManager
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
-@inject BTCPayServer.NBXplorerWaiterAccessor waiter
+@inject BTCPayServer.HostedServices.NBXplorerDashboard dashboard
+@inject BTCPayServer.HostedServices.CssThemeManager themeManager
 
-@{
-    var waiterState = waiter.Instance.State;
-    var lastStatus = waiter.Instance.LastStatus;
-
-    var synching = waiterState == NBXplorerState.Synching &&
-        lastStatus != null &&
-        lastStatus.NodeBlocks.HasValue &&
-        lastStatus.NodeHeaders.HasValue &&
-        lastStatus.VerificationProgress.HasValue;
-    var verificationProgress = lastStatus != null && lastStatus.VerificationProgress.HasValue ? lastStatus.VerificationProgress.Value * 100 : 0.0;
-}
+@addTagHelper *, BundlerMinifier.TagHelpers
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
+    @if (themeManager.DiscourageSearchEngines)
+    {
+        <META NAME="robots" CONTENT="noindex">
+    }
 
     <title>BTCPay Server</title>
 
-    <!-- Bootstrap core CSS -->
-    <link href="~/vendor/bootstrap/css/bootstrap.css" rel="stylesheet">
+    @* CSS *@
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.BootstrapUri)" rel="stylesheet" />
+    <link href="@this.Context.Request.GetRelativePathOrAbsolute(themeManager.CreativeStartUri)" rel="stylesheet" />
 
-    <!-- Custom fonts for this template -->
-    @*<link href="~/vendor/font-awesome/css/font-awesome.css" rel="stylesheet" type="text/css">
-        <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
-        <link href='https://fonts.googleapis.com/css?family=Merriweather:400,300,300italic,400italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>*@
+    <bundle name="wwwroot/bundles/main-bundle.min.css" />
 
-    <!-- Plugin CSS -->
-    <link href="~/vendor/magnific-popup/magnific-popup.css" rel="stylesheet">
+    @* JS *@
+    <bundle name="wwwroot/bundles/main-bundle.min.js" />
 
-    <!-- Custom styles for this template -->
-    <link href="~/css/creative.css" rel="stylesheet" />
-
-    <!-- Custom styles for this template -->
-    <link href="~/css/site.css" rel="stylesheet" />
-
+    @RenderSection("HeadScripts", required: false)
+    @RenderSection("HeaderContent", false)
 </head>
 
 <body id="page-top">
 
     @{
-        if(ViewBag.AlwaysShrinkNavBar == null)
+        if (ViewBag.AlwaysShrinkNavBar == null)
         {
             ViewBag.AlwaysShrinkNavBar = true;
         }
@@ -58,154 +46,96 @@
     }
 
     <!-- Navigation -->
-    <nav class='navbar navbar-expand-lg navbar-light fixed-top @additionalStyle' id="mainNav">
+    <nav class='navbar navbar-expand-lg navbar-dark fixed-top @additionalStyle' id="mainNav">
         <div class="container">
-            <a class="navbar-brand js-scroll-trigger" href="~/"><img src="~/img/logo.png" height="45"></a>
+            <a class="navbar-brand js-scroll-trigger" href="~/">
+                <img src="~/img/logo.png" height="45">
+                @if (env.NetworkType != NBitcoin.NetworkType.Mainnet)
+                {
+                    <span class="badge badge-warning" style="font-size:10px;">@env.NetworkType.ToString()</span>
+                }
+            </a>
+            @if (env.OnionUrl != null)
+            {
+                <span>
+                    <a href="@env.OnionUrl" target="_blank">
+                        <img src="~/img/icons/onion.svg" width="26" height="32" />
+                    </a>
+                </span>
+            }
             <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarResponsive">
                 <ul class="navbar-nav ml-auto">
-                    @if(SignInManager.IsSignedIn(User))
+                    @if (SignInManager.IsSignedIn(User))
                     {
-                        @if(User.IsInRole(Roles.ServerAdmin))
+                        if (User.IsInRole(Roles.ServerAdmin))
                         {
-                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger">Server settings</a></li>
+                            <li class="nav-item"><a asp-area="" asp-controller="Server" asp-action="ListUsers" class="nav-link js-scroll-trigger" id="ServerSettings">Server settings</a></li>
                         }
-                        <li class="nav-item"><a asp-area="" asp-controller="Stores" asp-action="ListStores" class="nav-link js-scroll-trigger">Stores</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger">Invoices</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="UserStores" asp-action="ListStores" class="nav-link js-scroll-trigger" id="Stores">Stores</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Apps" asp-action="ListApps" class="nav-link js-scroll-trigger" id="Apps">Apps</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Wallets" asp-action="ListWallets" class="nav-link js-scroll-trigger" id="Wallets">Wallets</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="Invoice" asp-action="ListInvoices" class="nav-link js-scroll-trigger" id="Invoices">Invoices</a></li>
+                        <li class="nav-item"><a asp-area="" asp-controller="PaymentRequest" asp-action="GetPaymentRequests" class="nav-link js-scroll-trigger" id="PaymentRequests">Payment Requests</a></li>
                         <li class="nav-item">
-                            <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage" class="nav-link js-scroll-trigger">My settings</a>
+                            <a asp-area="" asp-controller="Manage" asp-action="Index" title="My settings" class="nav-link js-scroll-trigger" id="MySettings"><i class="fa fa-user"></i></a>
                         </li>
                         <li class="nav-item">
-                            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Manage" class="nav-link js-scroll-trigger">Log out</a>
+                            <a asp-area="" asp-controller="Account" asp- asp-action="Logout" title="Logout" class="nav-link js-scroll-trigger" id="Logout"><i class="fa fa-sign-out"></i></a>
                         </li>}
-                    else
+                    else if (env.IsSecure)
                     {
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger">Register</a></li>
-                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger">Log in</a></li>}
+                        if (themeManager.ShowRegister)
+                        {
+                            <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Register" class="nav-link js-scroll-trigger" id="Register">Register</a></li>
+                        }
+                        <li class="nav-item"><a asp-area="" asp-controller="Account" asp-action="Login" class="nav-link js-scroll-trigger" id="Login">Log in</a></li>
+                    }
 
                 </ul>
             </div>
+            <div id="badUrl" class="alert alert-danger alert-dismissible" style="display:none; position:absolute; top:75px;" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <span>BTCPay is expecting you to access this website from <b>@(env.ExpectedProtocol)://@(env.ExpectedHost)/</b>. If you use a reverse proxy, please set the <b>X-Forwarded-Proto</b> header to <b id="browserScheme">@(env.ExpectedProtocol)</b> (<a href="https://docs.btcpayserver.org/faq-and-common-issues/faq-deployment#btcpay-is-expecting-you-to-access-this-website-from" target="_blank">More information</a>)</span>
+            </div>
+            @if (!env.IsSecure)
+            {
+                <div class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <span>Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. <br /> 
+                          We disabled the register and login link so you don't leak your credentials.</span>
+                </div>
+            }
         </div>
     </nav>
 
+
     @RenderBody()
 
-
-    @if(waiterState == NBXplorerState.NotConnected)
+    @if (User.Identity.IsAuthenticated)
     {
-        <!-- Modal -->
-        <div id="no-nbxplorer" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title">NBXplorer is not running</h4>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>NBXplorer is not running, BTCPay Server will not be functional.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+        <footer class="siteFooter bg-dark text-white">
+            <div class="container text-right">@env.ToString()</div>
+        </footer>
     }
 
-    @if(synching)
+    @if (!dashboard.IsFullySynched())
     {
-        <!-- Modal -->
-        <div id="synching-modal" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title">Bitcoin Core node is synching...</h4>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Bitcoin Core is synching (Chain height: @lastStatus.NodeHeaders, Block height: @lastStatus.NodeBlocks)</p>
-                        <p>BTCPay Server will not work correctly until it is over.</p>
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" aria-valuenow="@((int)verificationProgress)"
-                                 aria-valuemin="0" aria-valuemax="100" style="width:@((int)verificationProgress)%">
-                                @((int)verificationProgress)%
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    }
-    else if(waiterState == NBXplorerState.Synching)
-    {
-        <!-- Modal -->
-        <div id="synching-modal" class="modal fade" role="dialog">
-            <div class="modal-dialog">
-
-                <!-- Modal content-->
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title">Bitcoin Core node is starting...</h4>
-                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <p>Satoshi is rolling the blocks forward... Time to drink a cup of tea?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    }
-
-    <footer class="bg-dark">
-        <div class="container text-right"><span style="font-size:8px;">@env.ToString()</span></div>
-    </footer>
-
-    <!-- Bootstrap core JavaScript -->
-    <script src="~/vendor/jquery/jquery.min.js"></script>
-    <script src="~/vendor/popper/popper.min.js"></script>
-    <script src="~/vendor/bootstrap/js/bootstrap.min.js"></script>
-
-    <!-- Plugin JavaScript -->
-    <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
-    <script src="~/vendor/scrollreveal/scrollreveal.min.js"></script>
-    <script src="~/vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
-
-    <!-- Custom scripts for this template -->
-    <script src="~/js/creative.js"></script>
-
-    @if(waiterState == NBXplorerState.NotConnected)
-    {
-        <script type="text/javascript">
-            $(function () {
-                $("#no-nbxplorer").modal();
-            });
-        </script>
-    }
-    @if(synching)
-    {
-        <script type="text/javascript">
-            $(function () {
-                $("#synching-modal").modal();
-            });
-        </script>
+        <partial name="SyncModal" />
     }
 
     @RenderSection("Scripts", required: false)
+
+        <script type="text/javascript">
+        var expectedDomain = @Safe.Json(env.ExpectedHost);
+        var expectedProtocol = @Safe.Json(env.ExpectedProtocol);
+        if (window.location.host != expectedDomain || window.location.protocol != expectedProtocol + ":") {
+            document.getElementById("badUrl").style.display = "block";
+            document.getElementById("browserScheme").innerText = window.location.protocol.substr(0, window.location.protocol.length -1);
+        }
+        </script>
 </body>
 
 </html>

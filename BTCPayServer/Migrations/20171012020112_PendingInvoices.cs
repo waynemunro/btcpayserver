@@ -8,7 +8,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (SupportDropColumn(migrationBuilder.ActiveProvider))
+            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
             {
                 migrationBuilder.DropColumn(
                     name: "Name",
@@ -22,17 +22,12 @@ namespace BTCPayServer.Migrations
                 name: "PendingInvoices",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PendingInvoices", x => x.Id);
                 });
-        }
-
-        private bool SupportDropColumn(string activeProvider)
-        {
-            return activeProvider != "Microsoft.EntityFrameworkCore.Sqlite";
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

@@ -1,58 +1,86 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
+  <Import Project="../Build/Common.csproj" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
-		<Version>1.0.0.49</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Build\dockerfiles\**" />
+    <Compile Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <Compile Remove="wwwroot\css\**" />
+    <Compile Remove="wwwroot\vendor\jquery-nice-select\**" />
     <Content Remove="Build\dockerfiles\**" />
+    <Content Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <Content Remove="wwwroot\css\**" />
+    <Content Remove="wwwroot\vendor\jquery-nice-select\**" />
     <EmbeddedResource Remove="Build\dockerfiles\**" />
+    <EmbeddedResource Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <EmbeddedResource Remove="wwwroot\css\**" />
+    <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
     <None Remove="Build\dockerfiles\**" />
+    <None Remove="wwwroot\bundles\jqueryvalidate\**" />
+    <None Remove="wwwroot\css\**" />
+    <None Remove="wwwroot\vendor\jquery-nice-select\**" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="bundleconfig.json" />
     <EmbeddedResource Include="Currencies.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Hangfire" Version="1.6.17" />
-    <PackageReference Include="Hangfire.MemoryStorage" Version="1.5.2" />
-    <PackageReference Include="Hangfire.PostgreSql" Version="1.4.8.1" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.1.1" />
+    <PackageReference Include="BuildBundlerMinifier" Version="2.9.406" />
+    <PackageReference Include="BundlerMinifier.Core" Version="2.9.406" />
+    <PackageReference Include="BundlerMinifier.TagHelpers" Version="2.9.406" />
+    <PackageReference Include="HtmlSanitizer" Version="4.0.217" />
+    <PackageReference Include="LedgerWallet" Version="2.0.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
-    <PackageReference Include="NBitcoin" Version="4.0.0.50" />
-    <PackageReference Include="NBitpayClient" Version="1.0.0.13" />	  
-    <PackageReference Include="DBreeze" Version="1.87.0" />
-    <PackageReference Include="NBXplorer.Client" Version="1.0.0.20" />
-    <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.1" />
-    <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.2" />
-    <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.13" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.0.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
-    <PackageReference Include="System.Xml.XmlSerializer" Version="4.0.11" />
+    <PackageReference Include="Microsoft.NetCore.Analyzers" Version="2.6.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="NBitpayClient" Version="1.0.0.34" />	  
+    <PackageReference Include="DBriize" Version="1.0.0.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="NicolasDorier.CommandLine" Version="1.0.0.2" />
+    <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="1.0.0.3" />
+    <PackageReference Include="NicolasDorier.RateLimits" Version="1.0.0.9" />
+    <PackageReference Include="NicolasDorier.StandardConfiguration" Version="1.0.0.18" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.2" />
+    <PackageReference Include="OpenIddict" Version="2.0.0" />
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="2.0.0" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.1.2" />
+    <PackageReference Include="Serilog" Version="2.7.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="2.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="4.0.0" />
+    <PackageReference Include="SSH.NET" Version="2016.1.0" />
+    <PackageReference Include="Text.Analyzers" Version="2.6.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.3" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.1" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.1" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.9" />
+    <PackageReference Include="TwentyTwenty.Storage" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.11.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.11.2" />
+    <PackageReference Include="U2F.Core" Version="1.0.4" />
+		<PackageReference Include="YamlDotNet" Version="5.2.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.0" />
-		<DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.0.0" />
 		<DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="wwwroot\js\core.js" />
-	  <None Include="wwwroot\js\creative.js" />
-	  <None Include="wwwroot\js\creative.min.js" />
-	  <None Include="wwwroot\js\site.js" />
-	  <None Include="wwwroot\js\site.min.js" />
-	  <None Include="wwwroot\vendor\bootstrap\js\bootstrap.js" />
-	  <None Include="wwwroot\vendor\bootstrap\js\bootstrap.min.js" />
+	  <None Include="wwwroot\checkout\js\core.js" />
+	  <None Include="wwwroot\vendor\bootstrap4-creativestart\creative.js" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
 	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />
 	  <None Include="wwwroot\vendor\font-awesome\less\animated.less" />
@@ -98,5 +126,94 @@
 
 	<ItemGroup>
 	  <Folder Include="Build\" />
+	  <Folder Include="U2F\Services" />
+	  <Folder Include="wwwroot\vendor\clipboard.js\" />
+	  <Folder Include="wwwroot\vendor\highlightjs\" />
+	  <Folder Include="wwwroot\vendor\summernote" />
+	  <Folder Include="wwwroot\vendor\u2f" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\BTCPayServer.Rating\BTCPayServer.Rating.csproj" />
+	  <ProjectReference Include="..\BTCPayServer.Common\BTCPayServer.Common.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+    <Content Update="Views\Apps\_ViewImports.cshtml">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Home\BitpayTranslator.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\DynamicDnsServices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\LightningChargeServices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\LightningWalletServices.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\P2PService.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\DynamicDnsService.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Server\SSHService.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Stores\ShowToken.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+    <Content Update="Views\Stores\PayButtonEnable.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
+	  <Content Update="Views\Stores\PayButton.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Public\PayButtonHandle.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Server\LndServices.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Server\Maintenance.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Server\Services.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\ListWallets.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBTCombine.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBTReady.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletPSBT.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletRescan.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletSendLedger.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\WalletTransactions.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\_Nav.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\_ViewImports.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
+	  <Content Update="Views\Wallets\_ViewStart.cshtml">
+	    <Pack>$(IncludeRazorContentInPack)</Pack>
+	  </Content>
 	</ItemGroup>
 </Project>

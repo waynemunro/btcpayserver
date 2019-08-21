@@ -3,10 +3,26 @@
     ViewData["Title"] = "Error";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<h1 class="text-danger">
+    @if (!string.IsNullOrEmpty(Model.Error)) {
+        <strong>@Model.Error</strong>
+    }
+    else
+    {
+        @:Error.
+    }
+</h1>
+<h2 class="text-danger">
+    @if (!string.IsNullOrEmpty(Model.ErrorDescription)) {
+        <small>@Model.ErrorDescription</small>
+    }
+    else
+    {
+        @:An error occurred while processing your request.
+    }
+</h2>
 
-@if(Model.ShowRequestId)
+@if(Model != null && Model.ShowRequestId)
 {
     <p>
         <strong>Request ID:</strong> <code>@Model.RequestId</code>

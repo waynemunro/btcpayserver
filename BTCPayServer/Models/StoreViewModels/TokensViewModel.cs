@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Validations;
+﻿using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -17,12 +17,6 @@ namespace BTCPayServer.Models.StoreViewModels
         }
 
         public string Label
-        {
-            get; set;
-        }
-
-        [Required]
-        public string Facade
         {
             get; set;
         }
@@ -52,10 +46,6 @@ namespace BTCPayServer.Models.StoreViewModels
         {
             get; set;
         }
-        public string Facade
-        {
-            get; set;
-        }
     }
     public class TokensViewModel
     {
@@ -68,5 +58,10 @@ namespace BTCPayServer.Models.StoreViewModels
             get;
             set;
         }
+
+        [Display(Name = "API Key")]
+        public string ApiKey { get; set; }
+        public string EncodedApiKey { get; set; }
+        public bool StoreNotConfigured { get; set; }
     }
 }

@@ -31,6 +31,7 @@ namespace BTCPayServer.Services.Rates
             get;
             internal set;
         }
+        public bool Crypto { get; set; }
     }
     public class CurrencyNameTable
     {
@@ -40,6 +41,44 @@ namespace BTCPayServer.Services.Rates
         }
 
         static Dictionary<string, IFormatProvider> _CurrencyProviders = new Dictionary<string, IFormatProvider>();
+
+        public string FormatCurrency(string price, string currency)
+        {
+            return FormatCurrency(decimal.Parse(price, CultureInfo.InvariantCulture), currency);
+        }
+        public string FormatCurrency(decimal price, string currency)
+        {
+            return price.ToString("C", GetCurrencyProvider(currency));
+        }
+
+        public NumberFormatInfo GetNumberFormatInfo(string currency, bool useFallback)
+        {
+            var data = GetCurrencyProvider(currency);
+            if (data is NumberFormatInfo nfi)
+                return nfi;
+            if (data is CultureInfo ci)
+                return ci.NumberFormat;
+            if (!useFallback)
+                return null;
+            return CreateFallbackCurrencyFormatInfo(currency);
+        }
+
+        private NumberFormatInfo CreateFallbackCurrencyFormatInfo(string currency)
+        {
+            var usd = GetNumberFormatInfo("USD", false);
+            var currencyInfo = (NumberFormatInfo)usd.Clone();
+            currencyInfo.CurrencySymbol = currency;
+            return currencyInfo;
+        }
+        public NumberFormatInfo GetNumberFormatInfo(string currency)
+        {
+            var curr = GetCurrencyProvider(currency);
+            if (curr is CultureInfo cu)
+                return cu.NumberFormat;
+            if (curr is NumberFormatInfo ni)
+                return ni;
+            return null;
+        }
         public IFormatProvider GetCurrencyProvider(string currency)
         {
             lock (_CurrencyProviders)
@@ -54,9 +93,13 @@ namespace BTCPayServer.Services.Rates
                         }
                         catch { }
                     }
-                    AddCurrency(_CurrencyProviders, "BTC", 8, "BTC");
+
+                    foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
+                    {
+                        AddCurrency(_CurrencyProviders, network.CryptoCode, 8, network.CryptoCode);
+                    }
                 }
-                return _CurrencyProviders.TryGet(currency);
+                return _CurrencyProviders.TryGet(currency.ToUpperInvariant());
             }
         }
 
@@ -73,6 +116,31 @@ namespace BTCPayServer.Services.Rates
             number.CurrencyPositivePattern = 3;
             number.NegativeSign = culture.NumberFormat.NegativeSign;
             currencyProviders.TryAdd(code, number);
+        }
+
+        /// <summary>
+        /// Format a currency like "0.004 $ (USD)", round to significant divisibility
+        /// </summary>
+        /// <param name="value">The value</param>
+        /// <param name="currency">Currency code</param>
+        /// <param name="threeLetterSuffix">Add three letter suffix (like USD)</param>
+        /// <returns></returns>
+        public string DisplayFormatCurrency(decimal value, string currency, bool threeLetterSuffix = true)
+        {
+            var provider = GetNumberFormatInfo(currency, true);
+            var currencyData = GetCurrencyData(currency, true);
+            var divisibility = currencyData.Divisibility;
+            value = value.RoundToSignificant(ref divisibility);
+            if (divisibility != provider.CurrencyDecimalDigits)
+            {
+                provider = (NumberFormatInfo)provider.Clone();
+                provider.CurrencyDecimalDigits = divisibility;
+            }
+
+            if (currencyData.Crypto)
+                return value.ToString("C", provider);
+            else
+                return value.ToString("C", provider) + $" ({currency})";
         }
 
         Dictionary<string, CurrencyData> _Currencies;
@@ -106,13 +174,41 @@ namespace BTCPayServer.Services.Rates
                     info.Symbol = splitted[3];
                 }
             }
+
+            foreach (var network in new BTCPayNetworkProvider(NetworkType.Mainnet).GetAll())
+            {
+                if (!dico.TryAdd(network.CryptoCode, new CurrencyData()
+                {
+                    Code = network.CryptoCode,
+                    Divisibility = 8,
+                    Name = network.CryptoCode,
+                    Crypto = true
+                }))
+                {
+                    dico[network.CryptoCode].Crypto = true;
+                }
+            }
+
             return dico.Values.ToArray();
         }
 
-        public CurrencyData GetCurrencyData(string currency)
+        public CurrencyData GetCurrencyData(string currency, bool useFallback)
         {
             CurrencyData result;
-            _Currencies.TryGetValue(currency.ToUpperInvariant(), out result);
+            if (!_Currencies.TryGetValue(currency.ToUpperInvariant(), out result))
+            {
+                if (useFallback)
+                {
+                    var usd = GetCurrencyData("USD", false);
+                    result = new CurrencyData()
+                    {
+                        Code = currency,
+                        Crypto = true,
+                        Name = currency,
+                        Divisibility = usd.Divisibility
+                    };
+                }
+            }
             return result;
         }
 

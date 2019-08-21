@@ -28,6 +28,28 @@ namespace BTCPayServer.Filters
         }
     }
 
+    public class MediaTypeAcceptConstraintAttribute : Attribute, IActionConstraint
+    {
+        public MediaTypeAcceptConstraintAttribute(string mediaType)
+        {
+            MediaType = mediaType ?? throw new ArgumentNullException(nameof(mediaType));
+        }
+
+        public string MediaType
+        {
+            get; set;
+        }
+
+        public int Order => 100;
+
+        public bool Accept(ActionConstraintContext context)
+        {
+            if (!context.RouteContext.HttpContext.Request.Headers.ContainsKey("Accept"))
+                return false;
+            return context.RouteContext.HttpContext.Request.Headers["Accept"].ToString().StartsWith(MediaType, StringComparison.Ordinal);
+        }
+    }
+
     public class BitpayAPIConstraintAttribute : Attribute, IActionConstraint
     {
         public BitpayAPIConstraintAttribute(bool isBitpayAPI = true)
@@ -43,9 +65,7 @@ namespace BTCPayServer.Filters
 
         public bool Accept(ActionConstraintContext context)
         {
-            var hasVersion = context.RouteContext.HttpContext.Request.Headers["x-accept-version"].Where(h => h == "2.0.0").Any();
-            var hasIdentity = context.RouteContext.HttpContext.Request.Headers["x-identity"].Any();
-            return (hasVersion || hasIdentity) == IsBitpayAPI;
+            return context.RouteContext.HttpContext.GetIsBitpayAPI() == IsBitpayAPI;
         }
     }
 

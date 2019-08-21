@@ -1,16 +1,16 @@
-﻿@using BTCPayServer.Views.Manage
-@inject SignInManager<ApplicationUser> SignInManager
+﻿@inject SignInManager<ApplicationUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }
 
-<ul class="nav nav-pills nav-stacked">
-    <li class="@ManageNavPages.IndexNavClass(ViewContext)"><a asp-action="Index">Profile</a></li>
-    <li class="@ManageNavPages.ChangePasswordNavClass(ViewContext)"><a asp-action="ChangePassword">Password</a></li>
-    @if(hasExternalLogins)
+<div class="nav flex-column nav-pills">
+    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.Index)" asp-action="Index">Profile</a>
+    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.ChangePassword)" asp-action="ChangePassword" id="ChangePassword">Password</a>
+    @if (hasExternalLogins)
     {
-        <li class="@ManageNavPages.ExternalLoginsNavClass(ViewContext)"><a asp-action="ExternalLogins">External logins</a></li>
+        <a class="nav-link @ViewData.IsActivePage(ManageNavPages.ExternalLogins)" asp-action="ExternalLogins">External logins</a>
     }
-    <li class="@ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)"><a asp-action="TwoFactorAuthentication">Two-factor authentication</a></li>
-</ul>
+    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.TwoFactorAuthentication)" asp-action="TwoFactorAuthentication">Two-factor authentication</a>
+    <a class="nav-link @ViewData.IsActivePage(ManageNavPages.U2F)" asp-action="U2FAuthentication">U2F Authentication</a>
+</div>
 

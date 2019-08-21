@@ -1,40 +1,47 @@
-﻿using Hangfire;
+﻿using BTCPayServer.Logging;
+using NBitcoin;
+using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Mail;
 using System.Threading.Tasks;
 
 namespace BTCPayServer.Services.Mails
 {
-    // This class is used by the application to send email for account confirmation and password reset.
-    // For more details see https://go.microsoft.com/fwlink/?LinkID=532713
-    public class EmailSender : IEmailSender
+    public abstract class EmailSender : IEmailSender
     {
         IBackgroundJobClient _JobClient;
-        SettingsRepository _Repository;
-        public EmailSender(IBackgroundJobClient jobClient, SettingsRepository repository)
+
+        public EmailSender(IBackgroundJobClient jobClient)
         {
-            if (jobClient == null)
-                throw new ArgumentNullException(nameof(jobClient));
-            _JobClient = jobClient;
-            _Repository = repository;
-        }
-        public Task SendEmailAsync(string email, string subject, string message)
-        {
-            _JobClient.Schedule(() => SendMailCore(email, subject, message), TimeSpan.Zero);
-            return Task.CompletedTask;
+            _JobClient = jobClient ?? throw new ArgumentNullException(nameof(jobClient));
         }
 
-        public async Task SendMailCore(string email, string subject, string message)
+        public void SendEmail(string email, string subject, string message)
         {
-            var settings = await _Repository.GetSettingAsync<EmailSettings>();
-            if (settings == null)
-                throw new InvalidOperationException("Email settings not configured");
-            var smtp = settings.CreateSmtpClient();
-            MailMessage mail = new MailMessage(settings.From, email, subject, message);
-            mail.IsBodyHtml = true;
-            await smtp.SendMailAsync(mail);
+            _JobClient.Schedule(async (cancellationToken) =>
+            {
+                var emailSettings = await GetEmailSettings();
+                if (emailSettings?.IsComplete() != true)
+                {
+                    Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
+                    return;
+                }
+                using (var smtp = emailSettings.CreateSmtpClient())
+                {
+                    var mail = emailSettings.CreateMailMessage(new MailAddress(email), subject, message);
+                    mail.IsBodyHtml = true;
+                    try
+                    {
+                        await smtp.SendMailAsync(mail).WithCancellation(cancellationToken);
+                    }
+                    catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                    {
+                        smtp.SendAsyncCancel();
+                    }
+                }
+           }, TimeSpan.Zero);
         }
+
+        public abstract Task<EmailSettings> GetEmailSettings();
     }
 }

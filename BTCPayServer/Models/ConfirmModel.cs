@@ -7,6 +7,15 @@ namespace BTCPayServer.Models
 {
     public class ConfirmModel
     {
+        public ConfirmModel() { }
+
+        public ConfirmModel(string title, string desc, string action = null)
+        {
+            Title = title;
+            Description = desc;
+            Action = action;
+        }
+
         public string Title
         {
             get; set;
@@ -19,5 +28,6 @@ namespace BTCPayServer.Models
         {
             get; set;
         }
+        public string ButtonClass { get; set; } = "btn-danger";
     }
 }

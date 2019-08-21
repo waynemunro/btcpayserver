@@ -8,14 +8,11 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class StoresViewModel
     {
-        public string StatusMessage
-        {
-            get; set;
-        }
         public List<StoreViewModel> Stores
         {
             get; set;
         } = new List<StoreViewModel>();
+
         public class StoreViewModel
         {
             public string Name
@@ -32,9 +29,10 @@ namespace BTCPayServer.Models.StoreViewModels
             {
                 get; set;
             }
-            public Money Balance
+            public bool IsOwner
             {
-                get; set;
+                get;
+                set;
             }
         }
     }

@@ -12,22 +12,48 @@ namespace BTCPayServer.Filters
         {
             Value = value;
         }
-        public string Value
+
+        public XFrameOptionsAttribute(XFrameOptions type, string allowFrom = null)
         {
-            get; set;
+            switch (type)
+            {
+                case XFrameOptions.Deny:
+                    Value = "deny";
+                    break;
+                case XFrameOptions.SameOrigin:
+                    Value = "deny";
+                    break;
+                case XFrameOptions.AllowFrom:
+                    Value = $"allow-from {allowFrom}";
+                    break;
+                case XFrameOptions.AllowAll:
+                    Value = "allow-all";
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
+            }
         }
+
+        public string Value { get; set; }
+
         public void OnActionExecuted(ActionExecutedContext context)
         {
-
         }
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
-            var existing = context.HttpContext.Response.Headers["x-frame-options"].FirstOrDefault();
-            if (existing != null && Value == null)
-                context.HttpContext.Response.Headers.Remove("x-frame-options");
-            else
-                context.HttpContext.Response.Headers["x-frame-options"] = Value;
+            if (context.IsEffectivePolicy<XFrameOptionsAttribute>(this))
+            {
+                context.HttpContext.Response.SetHeaderOnStarting("X-Frame-Options", Value);
+            }
+        }
+
+        public enum XFrameOptions
+        {
+            Deny,
+            SameOrigin,
+            AllowFrom,
+            AllowAll
         }
     }
 }

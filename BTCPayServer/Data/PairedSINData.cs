@@ -12,15 +12,13 @@ namespace BTCPayServer.Data
             get; set;
         }
 
-        public string Facade
-        {
-            get; set;
-        }
-
         public string StoreDataId
         {
             get; set;
         }
+
+        public StoreData StoreData { get; set; }
+
         public string Label
         {
             get;

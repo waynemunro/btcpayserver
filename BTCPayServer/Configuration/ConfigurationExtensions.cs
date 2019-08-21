@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
+using NBitcoin;
 
 namespace BTCPayServer.Configuration
 {
@@ -13,7 +14,7 @@ namespace BTCPayServer.Configuration
     {
         public static T GetOrDefault<T>(this IConfiguration configuration, string key, T defaultValue)
         {
-            var str = configuration[key] ?? configuration[key.Replace(".", string.Empty)];
+            var str = configuration[key] ?? configuration[key.Replace(".", string.Empty, StringComparison.InvariantCulture)];
             if (str == null)
                 return defaultValue;
             if (typeof(T) == typeof(bool))
@@ -27,17 +28,26 @@ namespace BTCPayServer.Configuration
                 throw new FormatException();
             }
             else if (typeof(T) == typeof(Uri))
-                return (T)(object)new Uri(str, UriKind.Absolute);
+                if (string.IsNullOrEmpty(str))
+                {
+                    return defaultValue;
+                }
+                else
+                {
+                    return (T)(object)new Uri(str, UriKind.Absolute);
+                }
             else if (typeof(T) == typeof(string))
                 return (T)(object)str;
+            else if (typeof(T) == typeof(IPAddress))
+                return (T)(object)IPAddress.Parse(str);
             else if (typeof(T) == typeof(IPEndPoint))
             {
-                var separator = str.LastIndexOf(":");
+                var separator = str.LastIndexOf(":", StringComparison.InvariantCulture);
                 if (separator == -1)
                     throw new FormatException();
                 var ip = str.Substring(0, separator);
                 var port = str.Substring(separator + 1);
-                return (T)(object)new IPEndPoint(IPAddress.Parse(ip), int.Parse(port));
+                return (T)(object)new IPEndPoint(IPAddress.Parse(ip), int.Parse(port, CultureInfo.InvariantCulture));
             }
             else if (typeof(T) == typeof(int))
             {
@@ -47,6 +57,18 @@ namespace BTCPayServer.Configuration
             {
                 throw new NotSupportedException("Configuration value does not support time " + typeof(T).Name);
             }
+        }
+        
+        public static string GetDataDir(this IConfiguration configuration)
+        {
+            var networkType = DefaultConfiguration.GetNetworkType(configuration);
+            return GetDataDir(configuration, networkType);
+        }
+
+        public static string GetDataDir(this IConfiguration configuration, NetworkType networkType)
+        {
+            var defaultSettings = BTCPayDefaultSettings.GetDefaultSettings(networkType);
+            return configuration.GetOrDefault("datadir", defaultSettings.DefaultDataDirectory);
         }
     }
 }

@@ -32,6 +32,11 @@ namespace BTCPayServer.Data
             get; set;
         }
 
+        public List<InvoiceEventData> Events
+        {
+            get; set;
+        }
+
         public List<RefundAddressesData> RefundAddresses
         {
             get; set;
@@ -74,6 +79,12 @@ namespace BTCPayServer.Data
         public List<AddressInvoiceData> AddressInvoices
         {
             get; set;
+        }
+        public List<PendingInvoiceData> PendingInvoices { get; set; }
+
+        public Services.Invoices.InvoiceState GetInvoiceState()
+        {
+            return new Services.Invoices.InvoiceState(Status, ExceptionStatus);
         }
     }
 }

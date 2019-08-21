@@ -1,5 +1,7 @@
-﻿using BTCPayServer.Services.Invoices;
-using BTCPayServer.Validations;
+﻿using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
+using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -11,21 +13,26 @@ namespace BTCPayServer.Models.StoreViewModels
 {
     public class StoreViewModel
     {
-        class Format
+        public class DerivationScheme
         {
-            public string Name { get; set; }
+            public string Crypto { get; set; }
             public string Value { get; set; }
+            public WalletId WalletId { get; set; }
+            public bool Enabled { get; set; }
+        }
+        
+        public class ThirdPartyPaymentMethod
+        {
+            public string Provider { get; set; }
+            public bool Enabled { get; set; }
+            public string Action { get; set; }
         }
         public StoreViewModel()
         {
-            var btcPay = new Format { Name = "BTCPay", Value = "BTCPay" };
-            DerivationSchemeFormat = btcPay.Value;
-            DerivationSchemeFormats = new SelectList(new Format[]
-            {
-                btcPay,
-                new Format { Name = "Electrum", Value = "Electrum" },
-            }, nameof(btcPay.Value), nameof(btcPay.Name), btcPay);
+
         }
+
+        public bool CanDelete { get; set; }
         public string Id { get; set; }
         [Display(Name = "Store Name")]
         [Required]
@@ -36,7 +43,7 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
-        [Url]
+        [Uri]
         [Display(Name = "Store Website")]
         [MaxLength(500)]
         public string StoreWebsite
@@ -45,22 +52,24 @@ namespace BTCPayServer.Models.StoreViewModels
             set;
         }
 
-        public string DerivationScheme
-        {
-            get; set;
-        }
+        [Display(Name = "Allow anyone to create invoice")]
+        public bool AnyoneCanCreateInvoice { get; set; }
 
-        [Display(Name = "Derivation Scheme format")]
-        public string DerivationSchemeFormat
+        public List<StoreViewModel.DerivationScheme> DerivationSchemes { get; set; } = new List<StoreViewModel.DerivationScheme>();
+
+        public List<ThirdPartyPaymentMethod> ThirdPartyPaymentMethods { get; set; } =
+            new List<ThirdPartyPaymentMethod>();
+
+        [Display(Name = "Invoice expires if the full amount has not been paid after ... minutes")]
+        [Range(1, 60 * 24 * 24)]
+        public int InvoiceExpiration
         {
             get;
             set;
         }
 
-        public SelectList DerivationSchemeFormats { get; set; }
-
-        [Display(Name = "Payment invalid if transactions fails to confirm after ... minutes")]
-        [Range(10, 60 * 24 * 31)]
+        [Display(Name = "Payment invalid if transactions fails to confirm ... minutes after invoice expiration")]
+        [Range(10, 60 * 24 * 24)]
         public int MonitoringExpiration
         {
             get;
@@ -73,20 +82,32 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
-        [Display(Name = "Add network fee to invoice (vary with mining fees)")]
-        public bool NetworkFee
+        [Display(Name = "Add additional fee (network fee) to invoice...")]
+        public Data.NetworkFeeMode NetworkFeeMode
         {
             get; set;
         }
 
-        public List<(string KeyPath, string Address)> AddressSamples
-        {
-            get; set;
-        } = new List<(string KeyPath, string Address)>();
+        [Display(Name = "Description template of the lightning invoice")]
+        public string LightningDescriptionTemplate { get; set; }
 
-        public string StatusMessage
+        public class LightningNode
+        {
+            public string CryptoCode { get; set; }
+            public string Address { get; set; }
+            public bool Enabled { get; set; }
+        }
+        public List<LightningNode> LightningNodes
         {
             get; set;
+        } = new List<LightningNode>();
+
+        [Display(Name = "Consider the invoice paid even if the paid amount is ... % less than expected")]
+        [Range(0, 100)]
+        public double PaymentTolerance
+        {
+            get;
+            set;
         }
     }
 }
